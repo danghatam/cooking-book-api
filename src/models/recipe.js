@@ -3,8 +3,7 @@ import mongoose from 'mongoose';
 const recipeSchema = new mongoose.Schema({
 	name: {
 		type: String,
-		required: true,
-		validate: [(value) => { value.length <= 50 }, 'Recipe name is too long (50 max)']
+		required: true
 	},
 	image: {
 		type: String,
@@ -18,7 +17,7 @@ const recipeSchema = new mongoose.Schema({
 	notes: {
 		type: String
 	},
-	steps: [{
+	_steps: [{
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'Step'
 	}],
@@ -26,10 +25,22 @@ const recipeSchema = new mongoose.Schema({
 		type: Number,
 		default: 0
 	},
-	_user: {
+	_creator: {
 		type: mongoose.Schema.Types.ObjectId,
-		ref: 'User'
+		ref: 'User',
+		required: true
 	}
+});
+
+recipeSchema.pre('remove', function(next) {
+	const recipe = this;
+	recipe._steps.forEach(step => {
+		mongoose.models['Step'].remove({_id: step}, (err, res) => {
+			if (err) return next(err);
+			if (res) return next();
+		});
+	});
+	next();
 });
 
 export default mongoose.model('Recipe', recipeSchema);	
