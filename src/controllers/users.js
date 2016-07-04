@@ -11,7 +11,7 @@ const isAuthenticated = middlewares.isAuthenticated;
 const isAdmin = middlewares.isAdmin;
 
 // list users
-router.get('/', isAuthenticated, isAdmin, (req, res, next) => {
+router.get('/', (req, res, next) => {
   	UserService.list().then(users => {
     	res.json({
       		success: true,
@@ -25,7 +25,7 @@ router.get('/', isAuthenticated, isAdmin, (req, res, next) => {
 });
 
 // get an user
-router.get('/:id', isAuthenticated, (req, res, next) => {
+router.get('/:id', (req, res, next) => {
   	UserService.get(req.params.id).then(user => {
     	res.json({
       		success: true,
@@ -53,8 +53,7 @@ router.post('/', (req, res, next) => {
 });
 
 // update user
-router.put('/:id', isAuthenticated, (req, res, next) => {
-	// if (req.decoded._id != req.params.id) 
+router.put('/:id', (req, res, next) => {
   	UserService.edit(req.params.id, req.body).then(user => {
   		res.json({
     		success: true,
@@ -68,7 +67,7 @@ router.put('/:id', isAuthenticated, (req, res, next) => {
 });
 
 // delete user
-router.delete('/:id', isAuthenticated, isAdmin, (req, res, next) => {
+router.delete('/:id', (req, res, next) => {
 	UserService.remove(req.params.id).then(() => {
 		res.json({
     		success: true
