@@ -1,5 +1,16 @@
+import joi from 'joi';
 import User from '../models/user';
 import History from '../models/history';
+
+const joiAddUserSchema = joi.object().keys({
+	email: joi.string().regex(/[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/i).required(),
+	password: joi.string().min(5).max(20).required()
+});
+const joiEditUserSchema = joi.object().keys({
+	email: joi.string().regex(/[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/i),
+	password: joi.string().min(5).max(20),
+	admin: joi.boolean()
+});
 
 class UserService {
 
@@ -27,13 +38,18 @@ class UserService {
 	// add new user
 	add(params) {
 		return new Promise((resolve, reject) => {
-			const newUser = {
-				email: params.email,
-				password: params.password,
-			};
-			new User(newUser).save({new: true, safe: true}, (err, res) => {
-				if (err) reject(err);
-				resolve(res);
+			joi.validate(params, joiAddUserSchema, (validateErr, validateRes) => {
+				if (validateErr) reject(validateErr);
+				else {
+					const newUser = {
+						email: params.email,
+						password: params.password
+					};
+					new User(newUser).save({new: true, safe: true}, (err, res) => {
+						if (err) reject(err);
+						resolve(res);
+					});					
+				}
 			});
 		});
 	}
@@ -41,10 +57,15 @@ class UserService {
 	// update user
 	edit(id, params) {
 		return new Promise((resolve, reject) => {
-			User.findByIdAndUpdate(id, {$set: params}, {new: true}, (err, res) => {
-				if (err) reject(err);
-				if (!res) reject(new Error('Update failed. User not found.'));
-				resolve(res);
+			joi.validate(params, joiEditUserSchema, (validateErr, validateRes) => {
+				if (validateErr) reject(validateErr);
+				else {
+					User.findByIdAndUpdate(id, {$set: params}, {new: true}, (err, res) => {
+						if (err) reject(err);
+						if (!res) reject(new Error('Update failed. User not found.'));
+						resolve(res);
+					});
+				}
 			});
 		});
 	}
@@ -67,7 +88,7 @@ class UserService {
 				if (err) return reject(err);
 				if (!user) return reject(new Error('Authentication failed. User not found.'));
 				user.validPassword(params.password).then(res => {
-					if (res) resolve(res);
+					if (res) resolve(user);
 					else reject(new Error('Authentication failed. Wrong password.'));
 				}).catch(err => {
 					reject(err);
@@ -86,12 +107,12 @@ class UserService {
 		});
 	}
 
-	// add a recipe to user's history
-	addHistory(userId, recipeId) {
+	// add an entry to user's history
+	addHistory(userId, params) {
 		return new Promise((resolve, reject) => {
 			const newHistory = {
 				_user: userId,
-				_recipe: recipeId
+				_recipe: params.recipeId
 			};
 			History.findOne(newHistory, (findErr, findRes) => {
 				if (findErr) reject(err);

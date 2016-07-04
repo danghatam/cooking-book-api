@@ -21,8 +21,6 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre('save', function(next) {
 	const user = this;
-	if (user.email.match(/[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/i) == null)
-		return next(new Error('Registration failed. Invalid email.'));
 	mongoose.models['User'].findOne({email: user.email}).exec((err, res) => {
 		if (err) return next(err);
 		if (res) {

@@ -3,12 +3,15 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import config from '../../config';
+import * as middlewares from '../middlewares/middlewares';
 import UserService from '../services/users';
 
 const router = express.Router();
+const isAuthenticated = middlewares.isAuthenticated;
+const isAdmin = middlewares.isAdmin;
 
 // list users
-router.get('/', (req, res, next) => {
+router.get('/', isAuthenticated, isAdmin, (req, res, next) => {
   	UserService.list().then(users => {
     	res.json({
       		success: true,
@@ -22,7 +25,7 @@ router.get('/', (req, res, next) => {
 });
 
 // get an user
-router.get('/:id', (req, res, next) => {
+router.get('/:id', isAuthenticated, (req, res, next) => {
   	UserService.get(req.params.id).then(user => {
     	res.json({
       		success: true,
@@ -50,7 +53,8 @@ router.post('/', (req, res, next) => {
 });
 
 // update user
-router.put('/:id', (req, res, next) => {
+router.put('/:id', isAuthenticated, (req, res, next) => {
+	// if (req.decoded._id != req.params.id) 
   	UserService.edit(req.params.id, req.body).then(user => {
   		res.json({
     		success: true,
@@ -64,7 +68,7 @@ router.put('/:id', (req, res, next) => {
 });
 
 // delete user
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', isAuthenticated, isAdmin, (req, res, next) => {
 	UserService.remove(req.params.id).then(() => {
 		res.json({
     		success: true
@@ -79,7 +83,8 @@ router.delete('/:id', (req, res, next) => {
 // TODO login user: move to somewhere else
 router.post('/login', (req, res, next) => {
 	UserService.login(req.body).then(loginRes => {
-		const token = jwt.sign(req.body, config.secret, {
+		console.log(loginRes);
+		const token = jwt.sign(loginRes, config.secret, {
 			expiresIn : 60*60*24
 		});
   		res.json({
@@ -107,9 +112,9 @@ router.get('/:id/history', (req, res, next) => {
 	});
 });
 
-// add a recipe to user's history
-router.post('/:userId/history/:recipeId', (req, res, next) => {
-	UserService.addHistory(req.params.userId, req.params.recipeId).then(history => {
+// add an entry to user's history
+router.post('/:userId/history/', (req, res, next) => {
+	UserService.addHistory(req.params.userId, req.body).then(history => {
 		res.json({
 			success: true,
 			history: history
