@@ -17,7 +17,7 @@ class UserService {
 	// list users
 	list() {
 		return new Promise((resolve, reject) => {
-			User.find({}).exec((err, res) => {
+			User.find({}).select('email').exec((err, res) => {
 				if (err) reject(err);
 				resolve(res);
  			});
@@ -27,7 +27,7 @@ class UserService {
 	// get an user
 	get(id) {
 		return new Promise((resolve, reject) => {
-			User.findById(id).exec((err, res) => {
+			User.findById(id).select('email').exec((err, res) => {
 				if (err) reject(err);
 				if (!res) reject(new Error('User not found.'));
 				resolve(res);

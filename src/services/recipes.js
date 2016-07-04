@@ -33,7 +33,7 @@ class RecipeService {
 	// list recipes
 	list() {
 		return new Promise((resolve, reject) => {
-			Recipe.find({}).exec((err, res) => {
+			Recipe.find({}).select('name image views _creator').exec((err, res) => {
 				if (err) reject(err);
 				resolve(res);
 			});
@@ -170,7 +170,6 @@ class RecipeService {
 			});
 		});		
 	}
-
 }
 
 export default new RecipeService();
